@@ -33,7 +33,8 @@ local function sync(worker)
                 end                
                 hosts[#hosts+1] = {
                     address = k:sub(address_start),
-                    exp = exp
+                    exp = exp,
+                    state = true
                 }
             end
         end
