@@ -170,6 +170,7 @@ function _M.set(self, lookup_result, exp_offset)
             local exp = exp_offset + ttl
 
             cache:set(prefix .. ans.address, exp, ttl)
+            cache:set("state_" .. ans.address, true, ttl)
         end
     end
 
