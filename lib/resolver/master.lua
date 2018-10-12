@@ -170,7 +170,10 @@ function _M.set(self, lookup_result, exp_offset)
             local exp = exp_offset + ttl
 
             cache:set(prefix .. ans.address, exp, ttl)
-            cache:set("state_" .. ans.address, true, ttl)
+            -- use shared dict when needed
+            if ngx.worker.count() > 1 then
+                cache:set("state_" .. ans.address, true, ttl)
+            end    
         end
     end
 
