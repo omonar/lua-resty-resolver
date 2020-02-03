@@ -4,14 +4,14 @@ local resolver = require "resty.dns.resolver"
 local setmetatable = setmetatable
 
 
-local _M = { _VERSION = '0.02' }
+local _M = { _VERSION = '0.03' }
 
 local mt = { __index = _M }
 
 local resolve, schedule
 
 schedule = function(master, delay)
-    local ok, err = ngx.timer.at(delay, function(premature, master) 
+    local ok, err = ngx.timer.at(delay, function(premature, master)
         if not premature then
             resolve(master)
         end
@@ -39,7 +39,14 @@ resolve = function(master)
     local answers, err
 
     while ns_cnt ~= 0 do
-        answers, err = res:query(domain, master._qopts)
+        local tries = {}
+        answers, err = res:query(domain, master._qopts, tries)
+        
+        for i, err in ipairs(tries) do
+            err = "resolver master failed to query DNS for domain '" .. domain .. "': " .. err
+            ngx.log(ngx.DEBUG, err)
+        end
+
         if not answers then
             -- unable to even send the query, move along
             err = "resolver master failed to query DNS for domain '" .. domain .. "': " .. err
@@ -119,6 +126,8 @@ function _M.new(class, shared_dict_key, domain, nameservers, min_ttl, max_ttl, d
         _nameservers = nameservers,
         _blacklist   = blacklist_table
     }, mt)
+
+    ngx.shared[self._shared_key]:delete(self._name)
 
     return self, nil
 end
