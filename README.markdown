@@ -82,11 +82,14 @@ Synopsis
 
         # create a per-worker client that periodically syncs from the master cache (again, according to TTL values)
         init_worker_by_lua_block {
-            cdnjs_master:init() -- master `init` must be called from a worker since it uses `ngx.timer.at`, it is ok to call multiple times
-            local err
-            cdnjs_client, err = cdnjs_master:client()
-            if not cdnjs_client then
-                error("failed to create cdnjs resolver client: " .. err)
+            -- check if normal (integer) or helper (nil) process
+            if ngx.worker.id() ~= nil then
+               cdnjs_master:init() -- master `init` must be called from a worker since it uses `ngx.timer.at`, it is ok to call multiple times
+               local err
+               cdnjs_client, err = cdnjs_master:client()
+               if not cdnjs_client then
+                   error("failed to create cdnjs resolver client: " .. err)
+               end
             end
         }
 
